@@ -152,23 +152,29 @@ class EasyLoadingContainerState extends State<EasyLoadingContainer>
           builder: (BuildContext context, Widget? child) {
             return Opacity(
               opacity: _animationController.value,
-              child: IgnorePointer(
-                ignoring: _ignoring,
-                child: _dismissOnTap
-                    ? GestureDetector(
-                        onTap: widget.onDismiss ?? _onTap,
-                        behavior: HitTestBehavior.translucent,
-                        child: Container(
+              child: Listener(
+                onPointerDown: (PointerDownEvent event) {
+                  widget.onDismiss ?? _onTap();
+                  print('Pointer down on ignored area');
+                },
+                child: IgnorePointer(
+                  ignoring: _ignoring,
+                  child: _dismissOnTap
+                      ? GestureDetector(
+                          onTap: widget.onDismiss ?? _onTap,
+                          behavior: HitTestBehavior.translucent,
+                          child: Container(
+                            width: double.infinity,
+                            height: double.infinity,
+                            color: _maskColor,
+                          ),
+                        )
+                      : Container(
                           width: double.infinity,
                           height: double.infinity,
                           color: _maskColor,
                         ),
-                      )
-                    : Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        color: _maskColor,
-                      ),
+                ),
               ),
             );
           },
