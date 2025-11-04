@@ -230,12 +230,14 @@ class EasyLoading {
     Widget? indicator,
     EasyLoadingMaskType? maskType,
     bool? dismissOnTap,
+    Function()? onDismiss,
   }) {
     Widget w = indicator ?? (_instance.indicatorWidget ?? LoadingIndicator());
     return _instance._show(
       status: status,
       maskType: maskType,
       dismissOnTap: dismissOnTap,
+      onDismiss: onDismiss,
       w: w,
     );
   }
@@ -394,6 +396,7 @@ class EasyLoading {
     EasyLoadingMaskType? maskType,
     bool? dismissOnTap,
     EasyLoadingToastPosition? toastPosition,
+    Function()? onDismiss,
   }) async {
     assert(
       overlayEntry != null,
