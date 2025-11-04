@@ -39,12 +39,14 @@ class EasyLoadingContainer extends StatefulWidget {
   final EasyLoadingMaskType? maskType;
   final Completer<void>? completer;
   final bool animation;
+  final Function()? onDismiss;
 
   const EasyLoadingContainer({
     Key? key,
     this.indicator,
     this.status,
     this.dismissOnTap,
+    this.onDismiss,
     this.toastPosition,
     this.maskType,
     this.completer,
@@ -78,18 +80,20 @@ class EasyLoadingContainerState extends State<EasyLoadingContainer>
         : AlignmentDirectional.center;
     _dismissOnTap =
         widget.dismissOnTap ?? (EasyLoadingTheme.dismissOnTap ?? false);
-    _ignoring =
-        _dismissOnTap ? false : EasyLoadingTheme.ignoring(widget.maskType);
+    _ignoring = _dismissOnTap
+        ? false
+        : EasyLoadingTheme.ignoring(widget.maskType);
     _maskColor = EasyLoadingTheme.maskColor(widget.maskType);
-    _animationController = AnimationController(
-      vsync: this,
-      duration: EasyLoadingTheme.animationDuration,
-    )..addStatusListener((status) {
-        bool isCompleted = widget.completer?.isCompleted ?? false;
-        if (status == AnimationStatus.completed && !isCompleted) {
-          widget.completer?.complete();
-        }
-      });
+    _animationController =
+        AnimationController(
+          vsync: this,
+          duration: EasyLoadingTheme.animationDuration,
+        )..addStatusListener((status) {
+          bool isCompleted = widget.completer?.isCompleted ?? false;
+          if (status == AnimationStatus.completed && !isCompleted) {
+            widget.completer?.complete();
+          }
+        });
     show(widget.animation);
   }
 
@@ -102,9 +106,11 @@ class EasyLoadingContainerState extends State<EasyLoadingContainer>
   Future<void> show(bool animation) {
     if (isPersistentCallbacks) {
       Completer<void> completer = Completer<void>();
-      _ambiguate(SchedulerBinding.instance)!.addPostFrameCallback((_) =>
-          completer
-              .complete(_animationController.forward(from: animation ? 0 : 1)));
+      _ambiguate(SchedulerBinding.instance)!.addPostFrameCallback(
+        (_) => completer.complete(
+          _animationController.forward(from: animation ? 0 : 1),
+        ),
+      );
       return completer.future;
     } else {
       return _animationController.forward(from: animation ? 0 : 1);
@@ -114,9 +120,11 @@ class EasyLoadingContainerState extends State<EasyLoadingContainer>
   Future<void> dismiss(bool animation) {
     if (isPersistentCallbacks) {
       Completer<void> completer = Completer<void>();
-      _ambiguate(SchedulerBinding.instance)!.addPostFrameCallback((_) =>
-          completer
-              .complete(_animationController.reverse(from: animation ? 1 : 0)));
+      _ambiguate(SchedulerBinding.instance)!.addPostFrameCallback(
+        (_) => completer.complete(
+          _animationController.reverse(from: animation ? 1 : 0),
+        ),
+      );
       return completer.future;
     } else {
       return _animationController.reverse(from: animation ? 1 : 0);
@@ -148,7 +156,7 @@ class EasyLoadingContainerState extends State<EasyLoadingContainer>
                 ignoring: _ignoring,
                 child: _dismissOnTap
                     ? GestureDetector(
-                        onTap: _onTap,
+                        onTap: widget.onDismiss ?? _onTap,
                         behavior: HitTestBehavior.translucent,
                         child: Container(
                           width: double.infinity,
@@ -169,10 +177,7 @@ class EasyLoadingContainerState extends State<EasyLoadingContainer>
           animation: _animationController,
           builder: (BuildContext context, Widget? child) {
             return EasyLoadingTheme.loadingAnimation.buildWidget(
-              _Indicator(
-                status: _status,
-                indicator: widget.indicator,
-              ),
+              _Indicator(status: _status, indicator: widget.indicator),
               _animationController,
               _alignment,
             );
@@ -187,10 +192,7 @@ class _Indicator extends StatelessWidget {
   final Widget? indicator;
   final String? status;
 
-  const _Indicator({
-    required this.indicator,
-    required this.status,
-  });
+  const _Indicator({required this.indicator, required this.status});
 
   @override
   Widget build(BuildContext context) {
@@ -198,9 +200,7 @@ class _Indicator extends StatelessWidget {
       margin: const EdgeInsets.all(50.0),
       decoration: BoxDecoration(
         color: EasyLoadingTheme.backgroundColor,
-        borderRadius: BorderRadius.circular(
-          EasyLoadingTheme.radius,
-        ),
+        borderRadius: BorderRadius.circular(EasyLoadingTheme.radius),
         boxShadow: EasyLoadingTheme.boxShadow,
       ),
       padding: EasyLoadingTheme.contentPadding,
@@ -219,7 +219,8 @@ class _Indicator extends StatelessWidget {
           if (status != null)
             Text(
               status!,
-              style: EasyLoadingTheme.textStyle ??
+              style:
+                  EasyLoadingTheme.textStyle ??
                   TextStyle(
                     color: EasyLoadingTheme.textColor,
                     fontSize: EasyLoadingTheme.fontSize,
